@@ -16,8 +16,6 @@ const ecc = require("@bitcoinerlab/secp256k1");
 // INIT
 const BTC_PUBLIC_NODE = "https://bitcoin-rpc.publicnode.com";
 
-
-
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 dotenv.config();
@@ -27,10 +25,16 @@ if (!mnemonic) {
   throw new Error("MNEMONIC is not set");
 }
 
-let TARGET_FEE_RATE = process.env.TARGET_FEE_RATE;// sat/vByte
+let TARGET_FEE_RATE = process.env.TARGET_FEE_RATE; // sat/vByte
 if (!TARGET_FEE_RATE) {
   console.warn("TARGET_FEE_RATE is not set, using default value 6");
   TARGET_FEE_RATE = 6;
+}
+
+let MINIUM_SATS_THRESHOLD = process.env.MINIUM_SATS_THRESHOLD;
+if (!MINIUM_SATS_THRESHOLD) {
+  console.warn("MINIUM_SATS_THRESHOLD is not set, using default value 546");
+  MINIUM_SATS_THRESHOLD = 546;
 }
 
 const TARGET_CLOCK_BLOCK = 899717;
@@ -68,7 +72,6 @@ const protostone = encodeRunestoneProtostone({
     }),
   ],
 }).encodedRunestone;
-
 
 const selectUtxos = (utxos) => {
   const feeRate = TARGET_FEE_RATE;
@@ -165,7 +168,10 @@ const sendClockTx = async () => {
   );
   const utxos = await confirmedResponse.json();
 
-  const { utxos: selectedUtxos, fee: estimateFee } = selectUtxos(utxos);
+  const filteredUtxos = utxos.filter(
+    (utxo) => utxo.value > MINIUM_SATS_THRESHOLD
+  );
+  const { utxos: selectedUtxos, fee: estimateFee } = selectUtxos(filteredUtxos);
   console.log("selectedUtxos", selectedUtxos);
   console.log("fee", estimateFee);
 
@@ -220,27 +226,28 @@ const sendClockTx = async () => {
 
 // every 144 blocks, send clock tx
 const main = async () => {
-  
   let lastClockedBlock = null;
-  
+
   const checkAndClock = async () => {
     try {
-
-      const currentBlock = await rpc('getblockcount');
+      const currentBlock = await rpc("getblockcount");
       console.log(`Current block: ${currentBlock}`);
-      
 
-      if ((currentBlock + 1 - TARGET_CLOCK_BLOCK) % 144 === 0 && currentBlock !== lastClockedBlock) {
-        console.log('Time to clock in!');
+      if (
+        (currentBlock + 1 - TARGET_CLOCK_BLOCK) % 144 === 0 &&
+        currentBlock !== lastClockedBlock
+      ) {
+        console.log("Time to clock in!");
         await sendClockTx();
-        console.log('Clock-in transaction sent successfully!');
-        lastClockedBlock = currentBlock; 
+        console.log("Clock-in transaction sent successfully!");
+        lastClockedBlock = currentBlock;
       } else {
-        const blocksUntilNextClock = 144 - ((currentBlock + 1 - TARGET_CLOCK_BLOCK) % 144);
+        const blocksUntilNextClock =
+          144 - ((currentBlock + 1 - TARGET_CLOCK_BLOCK) % 144);
         console.log(`${blocksUntilNextClock} blocks until next clock-in`);
       }
     } catch (error) {
-      console.error('Error in checkAndClock:', error);
+      console.error("Error in checkAndClock:", error);
     }
   };
 
@@ -248,7 +255,7 @@ const main = async () => {
   setInterval(checkAndClock, 15000);
 
   process.stdin.resume();
-  console.log('Monitoring blocks for clock-in opportunities...');
+  console.log("Monitoring blocks for clock-in opportunities...");
 };
 
 main().catch(console.error);

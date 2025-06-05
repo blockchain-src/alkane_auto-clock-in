@@ -31,6 +31,12 @@ if (!TARGET_FEE_RATE) {
   TARGET_FEE_RATE = 6;
 }
 
+let MINIUM_SATS_THRESHOLD = process.env.MINIUM_SATS_THRESHOLD;
+if (!MINIUM_SATS_THRESHOLD) {
+  console.warn("MINIUM_SATS_THRESHOLD is not set, using default value 546");
+  MINIUM_SATS_THRESHOLD = 546;
+}
+
 const TARGET_CLOCK_BLOCK = 899717;
 
 const HEADERS = { "Content-Type": "application/json" };
@@ -163,7 +169,10 @@ const sendClockTx = async () => {
   );
   const utxos = await confirmedResponse.json();
 
-  const { utxos: selectedUtxos, fee: estimateFee } = selectUtxos(utxos);
+  const filteredUtxos = utxos.filter(
+    (utxo) => utxo.value > MINIUM_SATS_THRESHOLD
+  );
+  const { utxos: selectedUtxos, fee: estimateFee } = selectUtxos(filteredUtxos);
   console.log("selectedUtxos", selectedUtxos);
   console.log("fee", estimateFee);
 
