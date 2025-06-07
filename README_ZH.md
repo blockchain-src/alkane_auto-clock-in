@@ -2,18 +2,19 @@
 
 ## 📌 项目简介
 
-这是一个完全免费、开源的 Alkanes2:21568 自动打卡脚本，适用于 SegWit 钱包（以 `bc1q` 开头）。  
-该脚本支持两种交易模式，并可根据用户设定的费率自动构造交易。
+这是一个完全免费、开源的 Alkanes2:21568 自动打卡脚本，适用于 SegWit 钱包（以 `bc1q` 开头） 以及 Taproot 钱包（以 `bc1p` 开头） 。  
+该脚本支持四种交易模式，并可根据用户设定的起始费率自动构造交易，并完成自动的RBF手续费替换操作。
 
 ---
 
 ## ⚙️ 使用配置
 
-1. 复制 `.env.example` 文件并重命名为 `.env`
-2. 在 `.env` 文件中填写：
-   - **助记词**（mnemonic phrase）
-   - **你期望使用的手续费率**（单位：sat/vByte）
-3. 确保你的 SegWit 钱包地址（以 `bc1q...` 开头）余额充足，能支付矿工费。
+1. 复制 `config.yaml.example` 文件并重命名为 `config.yaml`
+2. 在 `config.yaml` 文件中填写：
+   - **助记词列表**（mnemonic phrase）
+   - **你期望开始使用的手续费率（不小于3）**（单位：sat/vByte）
+   - **你期望这次打卡最高使用的手续费率（一般设置为20左右，3-4u）**（单位：sat/vByte）
+3. 确保你的 SegWit 钱包地址（以 `bc1q...` 开头）/ Taproot 钱包（以 `bc1p` 开头）余额充足（推荐放20u左右），能支付矿工费。
 
 ---
 
@@ -40,12 +41,28 @@ pnpm install
 - 执行命令：`node main.js`
 
 
-### 🔹 模式一：不包含 Taproot 输出
+### 🔹 模式二：不包含 Taproot 输出
 - 输入：SegWit 地址 (bc1q)
 - 输出：
     - 打卡用的输出（如 OP_RETURN）
     - 找零输出（仍为 SegWit 地址）
 - 执行命令：`node without_taproot_output.js`
+
+
+### 🔹 模式三：Taproot输入，包含 Taproot 输出
+- 输入：Taproot 地址 (bc1p)
+- 输出：
+    - Taproot 输出 (bc1p)，金额为 546 sats
+    - 打卡用的输出（如 OP_RETURN）
+    - Taproot 找零输出
+- 执行命令：`node t_input_with_t_output.js`
+
+### 🔹 模式四：Taproot输入，包含 Taproot 输出
+- 输入：Taproot 地址 (bc1p)
+- 输出：
+    - 打卡用的输出（如 OP_RETURN）
+    - Taproot 找零输出
+- 执行命令：`node t_input_without_t_output.js`
 
 ---
 
@@ -69,4 +86,6 @@ bc1qx3m5u6uf4zryeyut26dkygeuj0vx6kj350a4ss
 ## 📫 联系作者
 
 Twitter: [OOP](https://x.com/__ababa___)
+
+Discord: [OOP](discord.gg/SpBRAzuBff )
 

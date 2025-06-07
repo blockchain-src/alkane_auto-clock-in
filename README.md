@@ -2,16 +2,19 @@
 
 ## 📌 Description
 
-This is a free and open-source Alkanes2:21568 auto check-in script designed for use with SegWit wallets.  
-The script supports two transaction modes and automatically constructs a transaction with configurable fee rate.
+This is a **completely free and open-source** auto check-in script for **Alkanes2:21568**, designed for both **SegWit wallets (starting with bc1q)** and **Taproot wallets (starting with bc1p)**.
+The script supports four transaction modes and can automatically construct transactions based on your configured starting fee rate, including **automatic RBF (Replace-By-Fee) resubmission**.
 
 ---
 
 ## ⚙️ Setup
 
-1. Copy the `.env.example` file and rename it to `.env`.
-2. Fill in your **mnemonic phrase** and desired **fee rate** (in sat/vByte).
-3. Ensure your SegWit wallet (`bc1q...`) has sufficient balance to cover transaction fees.
+1. Copy the `config.yaml.example` file and rename it to `config.yaml`.
+2. Fill in the following fields in config.yaml:
+	•	Your mnemonic phrase list
+	•	The starting fee rate (must be ≥ 3, in sat/vByte)
+	•	The maximum fee rate you are willing to pay for this check-in (usually around 20, i.e., 3-4 USD)
+3. Ensure your SegWit (`bc1q...`) or Taproot (`bc1p...`) address has a sufficient balance (recommended: ~$20 USD) to cover transaction fees.
 
 ---
 
@@ -44,13 +47,30 @@ pnpm install
     - Change output (SegWit)
 - Command: `node without_taproot_output.js`
 
+### 🔹 Mode 3: Taproot Input with Taproot Output
+- Input: Taproot address (bc1p)
+- Outputs:
+    - Taproot (bc1p) output (546 sats)
+    - Clock-in output
+    - Change output (Taproot)
+- Command: `node t_input_with_t_output.js`
+
+
+### 🔹 Mode 4: Taproot Input without Taproot Output
+- Input: Taproot address (bc1p)
+- Outputs:
+    - Clock-in output
+    - Change output (Taproot)
+- Command: `node t_input_without_t_output.js`
+
 ---
 
 ## ⚠️ Disclaimer
 
-This script is provided **completely free of charge**, and **contains no intentional code to access private keys**.
-However, the author is not responsible for any potential risks or losses caused by dependencies or third-party libraries.
-Please read and review the source code before use.
+This project is **fully open-source and free of charge**.
+The code **contains no logic to steal or leak your private key.**
+However, the author takes **no responsibility** for any losses caused by third-party dependencies or tools.
+You are strongly advised to **read and understand the source code** before using it.
 
 Use at your own risk.
 
@@ -58,7 +78,7 @@ Use at your own risk.
 
 ## 🙌 Donation
 
-If you find this script helpful, feel free to send a small donation:
+If you find this script helpful, feel free to donate:
 
 **BTC Address:**
 bc1qx3m5u6uf4zryeyut26dkygeuj0vx6kj350a4ss
@@ -68,3 +88,5 @@ bc1qx3m5u6uf4zryeyut26dkygeuj0vx6kj350a4ss
 ## 📫 Author
 
 Twitter: [@OOP](https://x.com/__ababa___)
+
+Discord: [OOP](discord.gg/SpBRAzuBff)
