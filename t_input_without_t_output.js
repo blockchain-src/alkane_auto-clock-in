@@ -40,6 +40,7 @@ const {
       internalPubkey,
       p2tr,
       account,
+      segwitAddress: account.segwitAddress,
     };
   });
 

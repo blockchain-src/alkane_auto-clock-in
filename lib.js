@@ -13,9 +13,9 @@ const bitcoin = require("bitcoinjs-lib");
 const { ECPairFactory } = require("ecpair");
 const ecc = require("@bitcoinerlab/secp256k1");
 
-const fs = require('fs');
-const YAML = require('yaml');
-const path = require('path');
+const fs = require("fs");
+const YAML = require("yaml");
+const path = require("path");
 
 // INIT
 const BTC_PUBLIC_NODE = "https://bitcoin-rpc.publicnode.com";
@@ -24,8 +24,8 @@ bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
 // Load config from YAML
-const configPath = path.join(__dirname, 'config.yaml');
-const configFile = fs.readFileSync(configPath, 'utf8');
+const configPath = path.join(__dirname, "config.yaml");
+const configFile = fs.readFileSync(configPath, "utf8");
 const config = YAML.parse(configFile);
 
 const mnemonics = config.mnemonics;
@@ -36,6 +36,9 @@ if (!Array.isArray(mnemonics) || mnemonics.length === 0) {
 
 const TARGET_FEE_RATE = config.target_fee_rate || 6;
 console.log(`Using fee rate: ${TARGET_FEE_RATE}`);
+
+const MAX_FEE_RATE = config.max_fee_rate || 20;
+console.log(`Using max fee rate: ${MAX_FEE_RATE}`);
 
 const MINIUM_SATS_THRESHOLD = config.minimum_sats_threshold || 546;
 console.log(`Using minimum sats threshold: ${MINIUM_SATS_THRESHOLD}`);
@@ -58,30 +61,31 @@ const rpc = async (method, params = []) => {
 
   const data = await res.json();
   return data.result;
-}
+};
 
 const sendTx = async (signedHex) => {
-    try {
-      const response = await fetch("https://mempool.space/api/tx", {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain",
-        },
-        body: signedHex,
-      });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to broadcast: ${errorText}`);
-      }
-  
-      const txid = await response.text();
-      console.log("Transaction broadcasted! TXID:", txid);
-    } catch (error) {
-      console.error("Error broadcasting transaction:", error);
-      throw error;
+  try {
+    const response = await fetch("https://mempool.space/api/tx", {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+      },
+      body: signedHex,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to broadcast: ${errorText}`);
     }
-  };
+
+    const txid = await response.text();
+    console.log("Transaction broadcasted! TXID:", txid);
+    return txid;
+  } catch (error) {
+    console.error("Error broadcasting transaction:", error);
+    throw error;
+  }
+};
 
 // clock-in (2:21568)
 const opcode = 103; // 103: clock-in
@@ -99,8 +103,7 @@ const protostone = encodeRunestoneProtostone({
   ],
 }).encodedRunestone;
 
-const selectUtxos = (utxos, withTarpoot = false) => {
-  const feeRate = TARGET_FEE_RATE;
+const selectUtxos = (utxos, withTarpoot = false, feeRate = TARGET_FEE_RATE) => {
   // select utxos
   const sortedUtxos = [...utxos].sort((a, b) => {
     return b.value - a.value;
@@ -165,21 +168,25 @@ const selectUtxos = (utxos, withTarpoot = false) => {
   return { utxos: selectedUtxos, fee: finalTxFee };
 };
 
-const accounts = mnemonics.map(mnemonic => 
+const accounts = mnemonics.map((mnemonic) =>
   mnemonicToAccount({
     mnemonic,
     opts: { network: bitcoin.networks.bitcoin },
   })
 );
 
-const privateKeysArray = mnemonics.map(mnemonic =>
+const privateKeysArray = mnemonics.map((mnemonic) =>
   getWalletPrivateKeys({
     mnemonic,
     opts: { network: bitcoin.networks.bitcoin },
   })
 );
 
-const getFinalInputUtxos = async (address, withTarpoot = false) => {  
+const getFinalInputUtxos = async (
+  address,
+  withTarpoot = false,
+  feeRate = TARGET_FEE_RATE
+) => {
   const confirmedResponse = await fetch(
     `https://mempool.space/api/address/${address}/utxo`
   );
@@ -188,44 +195,111 @@ const getFinalInputUtxos = async (address, withTarpoot = false) => {
   const filteredUtxos = utxos.filter(
     (utxo) => utxo.value > MINIUM_SATS_THRESHOLD
   );
-  const { utxos: selectedUtxos, fee: estimateFee } = selectUtxos(filteredUtxos, withTarpoot);
+  const { utxos: selectedUtxos, fee: estimateFee } = selectUtxos(
+    filteredUtxos,
+    withTarpoot,
+    feeRate
+  );
   console.log("selectedUtxos", selectedUtxos);
   console.log("fee", estimateFee);
   return {
     utxos: selectedUtxos,
     fee: estimateFee,
+  };
+};
+
+const getRecommendedFeeRate = async () => {
+  try {
+    const response = await fetch(
+      "https://mempool.space/api/v1/fees/recommended"
+    );
+    const feeData = await response.json();
+    return {
+      fastestFee: feeData.fastestFee,
+      halfHourFee: feeData.halfHourFee,
+      hourFee: feeData.hourFee,
+    };
+  } catch (error) {
+    console.error("Error getting recommended fee rates:", error);
+    return null;
   }
-}
+};
 
 // every 144 blocks, send clock tx
-const main = async (sendClockTx) => {
-    let lastClockedBlock = null;
-    const checkAndClock = async () => {
-      try {
-  
-        const currentBlock = await rpc('getblockcount');
-        console.log(`Current block: ${currentBlock}`);
-        
-        if ((currentBlock + 1 - TARGET_CLOCK_BLOCK) % 144 === 0 && currentBlock !== lastClockedBlock) {
-          console.log('Time to clock in!');
-          await sendClockTx();
-          console.log('Clock-in transaction sent successfully!');
-          lastClockedBlock = currentBlock; 
-        } else {
-          const blocksUntilNextClock = 144 - ((currentBlock + 1 - TARGET_CLOCK_BLOCK) % 144);
-          console.log(`${blocksUntilNextClock} blocks until next clock-in`);
-        }
-      } catch (error) {
-        console.error('Error in checkAndClock:', error);
-      }
+const main = async (sendClockTxForAccount, resendClockTx) => {
+  let lastClockedBlock = null;
+  let lastTxsStatus = {};
+  let accountsStatus = {};
+  for (const account of accounts) {
+    accountsStatus[account.segwitAddress] = {
+      blockHeight: null,
     };
-  
-    await checkAndClock();
-    setInterval(checkAndClock, 15000);
-  
-    process.stdin.resume();
-    console.log('Monitoring blocks for clock-in opportunities...');
+  }
+
+  const checkAndClock = async () => {
+    try {
+      const currentBlock = await rpc("getblockcount");
+      console.log(`Current block: ${currentBlock}`);
+
+      if ((currentBlock + 1 - TARGET_CLOCK_BLOCK) % 144 === 0) {
+        // initial clock-in
+        for (const account of accounts) {
+          if (
+            accountsStatus[account.segwitAddress].blockHeight === currentBlock
+          ) {
+            continue;
+          }
+          const txStatus = await sendClockTxForAccount(account.segwitAddress);
+          if (txStatus) {
+            lastTxsStatus[account.segwitAddress] = txStatus;
+            accountsStatus[account.segwitAddress].blockHeight = currentBlock;
+          }
+        }
+        // check if need to rbf
+        console.log(
+          "monitoring txs status"
+        );
+        const feeRates = await getRecommendedFeeRate();
+        console.log("current feeRate in mempool", feeRates.fastestFee);
+        const fastestFee = Math.min(feeRates.fastestFee, MAX_FEE_RATE);
+        for (const account of accounts) {
+          if (lastTxsStatus[account.segwitAddress]) {
+              const lastTxStatus = lastTxsStatus[account.segwitAddress];
+              const currentFeeRate = lastTxStatus.feeRate;
+              if (currentFeeRate < fastestFee) {
+                // minium add 3
+                const txStatus = await resendClockTx(
+                  lastTxStatus.accountDetail,
+                  lastTxStatus.selectedUtxos,
+                  lastTxStatus.estimateFee,
+                  lastTxStatus.feeRate,
+                  Math.max(fastestFee, currentFeeRate + 3)
+                );
+                console.log("txStatus", txStatus);
+                // update lastTxsStatus
+                if(txStatus) {
+                  lastTxsStatus[account.segwitAddress] = txStatus;
+                }
+              }
+          }
+        }
+      } else {
+        lastTxsStatus = {};
+        const blocksUntilNextClock =
+          144 - ((currentBlock + 1 - TARGET_CLOCK_BLOCK) % 144);
+        console.log(`${blocksUntilNextClock} blocks until next clock-in`);
+      }
+    } catch (error) {
+      console.error("Error in checkAndClock:", error);
+    }
   };
+
+  await checkAndClock();
+  setInterval(checkAndClock, 15000);
+
+  process.stdin.resume();
+  console.log("Monitoring blocks for clock-in opportunities...");
+};
 
 module.exports = {
   opcode,
