@@ -16,7 +16,8 @@
     "dotenv": "^16.5.0",
     "ecpair": "2.1.0",
     "runestone-js": "^0.3.0",
-    "tiny-secp256k1": "^2.2.1"
+    "tiny-secp256k1": "^2.2.1",
+    "yaml": "^2.8.0"
   },
   "engines": {
     "node": ">=16.0.0"

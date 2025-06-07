@@ -1,4 +1,3 @@
-const dotenv = require("dotenv");
 const {
   mnemonicToAccount,
   getWalletPrivateKeys,
@@ -14,29 +13,32 @@ const bitcoin = require("bitcoinjs-lib");
 const { ECPairFactory } = require("ecpair");
 const ecc = require("@bitcoinerlab/secp256k1");
 
+const fs = require('fs');
+const YAML = require('yaml');
+const path = require('path');
+
 // INIT
 const BTC_PUBLIC_NODE = "https://bitcoin-rpc.publicnode.com";
 
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
-dotenv.config();
 
-const mnemonic = process.env.MNEMONIC;
-if (!mnemonic) {
-  throw new Error("MNEMONIC is not set");
+// Load config from YAML
+const configPath = path.join(__dirname, 'config.yaml');
+const configFile = fs.readFileSync(configPath, 'utf8');
+const config = YAML.parse(configFile);
+
+const mnemonics = config.mnemonics;
+console.log(`Using ${mnemonics.length} mnemonics`);
+if (!Array.isArray(mnemonics) || mnemonics.length === 0) {
+  throw new Error("mnemonics must be a non-empty array in config.yaml");
 }
 
-let TARGET_FEE_RATE = process.env.TARGET_FEE_RATE;
-if (!TARGET_FEE_RATE) {
-  console.warn("TARGET_FEE_RATE is not set, using default value 6");
-  TARGET_FEE_RATE = 6;
-}
+const TARGET_FEE_RATE = config.target_fee_rate || 6;
+console.log(`Using fee rate: ${TARGET_FEE_RATE}`);
 
-let MINIUM_SATS_THRESHOLD = process.env.MINIUM_SATS_THRESHOLD;
-if (!MINIUM_SATS_THRESHOLD) {
-  console.warn("MINIUM_SATS_THRESHOLD is not set, using default value 546");
-  MINIUM_SATS_THRESHOLD = 546;
-}
+const MINIUM_SATS_THRESHOLD = config.minimum_sats_threshold || 546;
+console.log(`Using minimum sats threshold: ${MINIUM_SATS_THRESHOLD}`);
 
 const TARGET_CLOCK_BLOCK = 899717;
 
@@ -163,15 +165,19 @@ const selectUtxos = (utxos, withTarpoot = false) => {
   return { utxos: selectedUtxos, fee: finalTxFee };
 };
 
-const account = mnemonicToAccount({
-  mnemonic,
-  opts: { network: bitcoin.networks.bitcoin },
-});
+const accounts = mnemonics.map(mnemonic => 
+  mnemonicToAccount({
+    mnemonic,
+    opts: { network: bitcoin.networks.bitcoin },
+  })
+);
 
-const privateKeys = getWalletPrivateKeys({
-  mnemonic,
-  opts: { network: account.network },
-});
+const privateKeysArray = mnemonics.map(mnemonic =>
+  getWalletPrivateKeys({
+    mnemonic,
+    opts: { network: bitcoin.networks.bitcoin },
+  })
+);
 
 const getFinalInputUtxos = async (address, withTarpoot = false) => {  
   const confirmedResponse = await fetch(
@@ -225,7 +231,7 @@ module.exports = {
   opcode,
   calldata,
   protostone,
-  mnemonic,
+  mnemonics,
   TARGET_FEE_RATE,
   MINIUM_SATS_THRESHOLD,
   TARGET_CLOCK_BLOCK,
@@ -233,8 +239,8 @@ module.exports = {
   bitcoin,
   rpc,
   selectUtxos,
-  account,
-  privateKeys,
+  accounts,
+  privateKeysArray,
   sendTx,
   getFinalInputUtxos,
   main,

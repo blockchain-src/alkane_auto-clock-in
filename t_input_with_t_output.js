@@ -1,69 +1,87 @@
-
-
 const {
     ECPair,
     bitcoin,
-    account,
-    privateKeys,
+    accounts,
+    privateKeysArray,
     sendTx,
     getFinalInputUtxos,
     main,
+    protostone,
   } = require("./lib");
   const {
     tweakSigner,
   } = require("@oyl/sdk/lib/shared/utils");
 
-  // Extract key for taproot signing
-  const privateKey = Buffer.from(privateKeys.taproot.privateKey, "hex");
-  // Create a signer with the private key
-  const signer = ECPair.fromPrivateKey(privateKey, {
-    network: account.network,
+  // Create signers and addresses for all accounts
+  const accountDetails = accounts.map((account, index) => {
+    // Extract key for taproot signing
+    const privateKey = Buffer.from(privateKeysArray[index].taproot.privateKey, "hex");
+    // Create a signer with the private key
+    const signer = ECPair.fromPrivateKey(privateKey, {
+      network: account.network,
+    });
+
+    // Get the internal key (xonly pubkey)
+    const pubKey = Buffer.from(account.taproot.pubkey, "hex");
+    const internalPubkey = pubKey.slice(1, 33);
+
+    const tweaked = tweakSigner(signer);
+
+    // Create the p2tr payment with the internal pubkey
+    const p2tr = bitcoin.payments.p2tr({
+      internalPubkey,
+      network: account.network,
+    });
+
+    console.log(`Account ${index + 1} p2tr address: ${p2tr.address}`);
+
+    return {
+      signer: tweaked,
+      internalPubkey,
+      p2tr,
+      account,
+    };
   });
 
-  // Get the internal key (xonly pubkey)
-  const pubKey = Buffer.from(account.taproot.pubkey,"hex");
-  const internalPubkey = pubKey.slice(1, 33);
+  const sendClockTxForAccount = async (accountDetail) => {
+    const { signer, internalPubkey, p2tr, account } = accountDetail;
+    
+    try {
+      const { utxos: selectedUtxos, fee: estimateFee } = await getFinalInputUtxos(p2tr.address, true);
 
-  const tweaked = tweakSigner(signer);
+      let psbt = new bitcoin.Psbt({ network: bitcoin.networks.bitcoin });
 
+      for (const utxo of selectedUtxos) {
+        psbt.addInput({
+          hash: utxo.txid,
+          index: utxo.vout,
+          witnessUtxo: { value: utxo.value, script: p2tr.output },
+          tapInternalKey: internalPubkey,
+        });
+      }
 
-  
-  // Create the p2tr payment with the internal pubkey
-  const p2tr = bitcoin.payments.p2tr({
-    internalPubkey,
-    network: account.network,
-  });
+      const utxoValue = selectedUtxos.reduce((acc, utxo) => acc + utxo.value, 0);
+      const changeValue = utxoValue - estimateFee;
 
-  console.log("p2tr address:", p2tr.address);
+      psbt.addOutput({ address: account.taproot.address, value: 546 });
+      psbt.addOutput({ script: protostone, value: 0 });
+      psbt.addOutput({ address: p2tr.address, value: changeValue - 546 });
 
-  
-  const sendClockTx = async () => {
-    const { utxos: selectedUtxos, fee: estimateFee } = await getFinalInputUtxos(p2tr.address, true);
-  
-    let psbt = new bitcoin.Psbt({ network: bitcoin.networks.bitcoin });
-  
-    for (const utxo of selectedUtxos) {
-      psbt.addInput({
-        hash: utxo.txid,
-        index: utxo.vout,
-        witnessUtxo: { value: utxo.value, script: p2tr.output },
-        tapInternalKey: internalPubkey,
-      });
+      psbt.signAllInputs(signer);
+      psbt.finalizeAllInputs();
+      const signedHex = psbt.extractTransaction().toHex();
+      console.log(`Signed transaction for address ${p2tr.address}`);
+      await sendTx(signedHex);
+    } catch (error) {
+      console.error(`Error sending clock tx for address ${p2tr.address}:`, error);
     }
-  
-    const utxoValue = selectedUtxos.reduce((acc, utxo) => acc + utxo.value, 0);
-    const changeValue = utxoValue - estimateFee;
-  
-    psbt.addOutput({ address: account.taproot.address, value: 546 });
-    psbt.addOutput({ script: protostone, value: 0 });
-    psbt.addOutput({ address: p2tr.address, value: changeValue - 546 });
-  
-    psbt.signAllInputs(tweaked);
-    psbt.finalizeAllInputs();
-    const signedHex = psbt.extractTransaction().toHex();
-    console.log("signedHex", signedHex);
-    await sendTx(signedHex);
   };
-  
-  main(sendClockTx).catch(console.error);
+
+  const sendClockTxForAllAccounts = async () => {
+    for (const accountDetail of accountDetails) {
+      await sendClockTxForAccount(accountDetail);
+    }
+  };
+
+  main(sendClockTxForAllAccounts).catch(console.error);
   
