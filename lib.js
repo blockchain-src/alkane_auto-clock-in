@@ -255,31 +255,29 @@ const main = async (sendClockTxForAccount, resendClockTx) => {
           }
         }
         // check if need to rbf
-        console.log(
-          "monitoring txs status"
-        );
+        console.log("monitoring txs status");
         const feeRates = await getRecommendedFeeRate();
         console.log("current feeRate in mempool", feeRates.fastestFee);
         const fastestFee = Math.min(feeRates.fastestFee, MAX_FEE_RATE);
         for (const account of accounts) {
           if (lastTxsStatus[account.segwitAddress]) {
-              const lastTxStatus = lastTxsStatus[account.segwitAddress];
-              const currentFeeRate = lastTxStatus.feeRate;
-              if (currentFeeRate < fastestFee) {
-                // minium add 3
-                const txStatus = await resendClockTx(
-                  lastTxStatus.accountDetail,
-                  lastTxStatus.selectedUtxos,
-                  lastTxStatus.estimateFee,
-                  lastTxStatus.feeRate,
-                  Math.max(fastestFee, currentFeeRate + 3)
-                );
-                console.log("txStatus", txStatus);
-                // update lastTxsStatus
-                if(txStatus) {
-                  lastTxsStatus[account.segwitAddress] = txStatus;
-                }
+            const lastTxStatus = lastTxsStatus[account.segwitAddress];
+            const currentFeeRate = lastTxStatus.feeRate;
+            if (currentFeeRate < fastestFee) {
+              // minium add 3
+              const txStatus = await resendClockTx(
+                lastTxStatus.accountDetail,
+                lastTxStatus.selectedUtxos,
+                lastTxStatus.estimateFee,
+                lastTxStatus.feeRate,
+                Math.max(fastestFee, currentFeeRate + 3)
+              );
+              console.log("txStatus", txStatus);
+              // update lastTxsStatus
+              if (txStatus) {
+                lastTxsStatus[account.segwitAddress] = txStatus;
               }
+            }
           }
         }
       } else {
