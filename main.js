@@ -76,7 +76,10 @@ const sendClockTxForAccount = async (accountSegwitAddress) => {
 
     psbt.addOutput({ address: account.taproot.address, value: 546 });
     psbt.addOutput({ script: protostone, value: 0 });
-    psbt.addOutput({ address: segwitAddress, value: changeValue - 546 });
+    // ignore dust output 
+    if (changeValue - 546 > 330) {
+      psbt.addOutput({ address: segwitAddress, value: changeValue - 546 });
+    }
 
     psbt.signAllInputs(signer);
     psbt.finalizeAllInputs();

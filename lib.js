@@ -227,7 +227,6 @@ const getRecommendedFeeRate = async () => {
 
 // every 144 blocks, send clock tx
 const main = async (sendClockTxForAccount, resendClockTx) => {
-  let lastClockedBlock = null;
   let lastTxsStatus = {};
   let accountsStatus = {};
   for (const account of accounts) {
