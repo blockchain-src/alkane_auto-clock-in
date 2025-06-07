@@ -32,7 +32,7 @@ pnpm install
 
 ## 🚀 使用方法
 
-### 🔹 模式一：包含 Taproot 输出
+### 🔹 模式一：SegWit输入，包含 Taproot 输出
 - 输入：SegWit 地址 (bc1q)
 - 输出：
     - Taproot 输出地址 (bc1p)，金额为 546 sats
@@ -41,7 +41,7 @@ pnpm install
 - 执行命令：`node main.js`
 
 
-### 🔹 模式二：不包含 Taproot 输出
+### 🔹 模式二：SegWit输入，不包含 Taproot 输出
 - 输入：SegWit 地址 (bc1q)
 - 输出：
     - 打卡用的输出（如 OP_RETURN）
@@ -57,7 +57,7 @@ pnpm install
     - Taproot 找零输出
 - 执行命令：`node t_input_with_t_output.js`
 
-### 🔹 模式四：Taproot输入，包含 Taproot 输出
+### 🔹 模式四：Taproot输入，不包含 Taproot 输出
 - 输入：Taproot 地址 (bc1p)
 - 输出：
     - 打卡用的输出（如 OP_RETURN）
