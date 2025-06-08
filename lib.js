@@ -175,6 +175,10 @@ const accounts = mnemonics.map((mnemonic) =>
   })
 );
 
+accounts.forEach((account) => {
+ account.segwitAddress = account.nativeSegwit.address;
+});
+
 const privateKeysArray = mnemonics.map((mnemonic) =>
   getWalletPrivateKeys({
     mnemonic,
