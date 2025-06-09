@@ -120,29 +120,29 @@ const selectUtxos = (utxos, withTarpoot = false, feeRate = TARGET_FEE_RATE) => {
   const selectedUtxos = [];
   let selectedAmount = 0;
 
-  const exactMatchUtxo = sortedUtxos.find((utxo) => {
-    const txFee = feeRate * (baseTxBytes + inputBytes);
-    return utxo.value >= txFee && utxo.value <= txFee + dustThreshold;
-  });
+  // const exactMatchUtxo = sortedUtxos.find((utxo) => {
+  //   const txFee = feeRate * (baseTxBytes + inputBytes);
+  //   return utxo.value >= txFee && utxo.value <= txFee + dustThreshold;
+  // });
 
-  if (exactMatchUtxo) {
-    return {
-      utxos: [exactMatchUtxo],
-      fee: feeRate * (baseTxBytes + inputBytes),
-    };
-  }
+  // if (exactMatchUtxo) {
+  //   return {
+  //     utxos: [exactMatchUtxo],
+  //     fee: feeRate * (baseTxBytes + inputBytes),
+  //   };
+  // }
 
-  const minimumViableUtxo = sortedUtxos.find((utxo) => {
-    const txFee = feeRate * (baseTxBytes + inputBytes);
-    return utxo.value >= txFee;
-  });
+  // const minimumViableUtxo = sortedUtxos.find((utxo) => {
+  //   const txFee = feeRate * (baseTxBytes + inputBytes);
+  //   return utxo.value >= txFee;
+  // });
 
-  if (minimumViableUtxo) {
-    return {
-      utxos: [minimumViableUtxo],
-      fee: feeRate * (baseTxBytes + inputBytes),
-    };
-  }
+  // if (minimumViableUtxo) {
+  //   return {
+  //     utxos: [minimumViableUtxo],
+  //     fee: feeRate * (baseTxBytes + inputBytes),
+  //   };
+  // }
 
   for (const utxo of sortedUtxos) {
     selectedUtxos.push(utxo);
