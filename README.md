@@ -3,9 +3,11 @@
 ## 📌 简介
 
 这是一个**完全免费且开源**的 Alkanes2:21568 自动打卡脚本。
+
 <div align="center">
   <img src="clockin.png" alt="clock-in" width="800" style="border-radius: 8px; margin-top: 10px;"/>
 </div>
+
 ## ⚙️ 克隆仓库
 ```bash
 git clone https://github.com/blockchain-src/alkane_auto-clock-in.git && cd alkane_auto-clock-in
