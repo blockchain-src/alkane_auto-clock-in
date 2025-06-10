@@ -3,5 +3,3 @@
 .env.*.local
 node_modules/ 
 *_test.js
-
-config.yaml

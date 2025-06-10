@@ -1,0 +1,10 @@
+# 助记词
+mnemonic_1: word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12
+mnemonic_2: word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12
+mnemonic_3: word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12
+...
+
+# 费用设置
+target_fee_rate: 6
+max_fee_rate: 20
+minimum_sats_threshold: 546 
