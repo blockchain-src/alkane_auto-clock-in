@@ -12,7 +12,7 @@
 - ![macOS](https://img.shields.io/badge/-macOS-000000?logo=apple&logoColor=white)
 - ![Linux](https://img.shields.io/badge/-Linux-FCC624?logo=linux&logoColor=black)
 
-## ⚙️ 克隆仓库
+## 🏠 克隆仓库
 ```bash
 git clone https://github.com/blockchain-src/alkane_auto-clock-in.git && cd alkane_auto-clock-in
 ```
