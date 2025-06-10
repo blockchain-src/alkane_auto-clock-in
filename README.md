@@ -1,92 +1,59 @@
-# 🛠️ Alkanes Auto Check-in Script by [@OOP](https://x.com/__ababa___)
+# 🛠️ Alkanes 自动打卡脚本
 
-## 📌 Description
+## 📌 简介
 
-This is a **completely free and open-source** auto check-in script for **Alkanes2:21568**, designed for both **SegWit wallets (starting with bc1q)** and **Taproot wallets (starting with bc1p)**.
-The script supports four transaction modes and can automatically construct transactions based on your configured starting fee rate, including **automatic RBF (Replace-By-Fee) resubmission**.
+这是一个**完全免费且开源**的 Alkanes2:21568 自动打卡脚本。
+<div align="center">
+  <img src="https://x.com/__ababa___/status/1931603279219454371/photo/3" alt="Clock-in" width="180" style="border-radius: 8px; margin-bottom: 10px;"/>
+</div>
+---
+## ⚙️ 克隆仓库
+```bash
+git clone https://github.com/blockchain-src/alkane_auto-clock-in.git && cd alkane_auto-clock-in
+```
+
+## ⚙️ 配置
+1. 在 `config.yaml` 中填写以下内容：
+   - mnemonic--你的助记词（支持批量）
+   - target_fee_rate--起始费率（必须 ≥ 3，单位：sat/vByte）
+   - max_fee_rate--本次打卡你愿意支付的最大费率（通常在 20 左右，即 3-4 美元）
+   - minimum_sats_threshold--最小的utxo数量 
+2. 确保你的隔离见证（`bc1q...`）地址有足够余额（建议约 $20 美元），以支付交易手续费。
 
 ---
 
-## ⚙️ Setup
-
-1. Copy the `config.yaml.example` file and rename it to `config.yaml`.
-2. Fill in the following fields in config.yaml:
-	•	Your mnemonic phrase list
-	•	The starting fee rate (must be ≥ 3, in sat/vByte)
-	•	The maximum fee rate you are willing to pay for this check-in (usually around 20, i.e., 3-4 USD)
-3. Ensure your SegWit (`bc1q...`) or Taproot (`bc1p...`) address has a sufficient balance (recommended: ~$20 USD) to cover transaction fees.
-
----
-
-## 📦 Installation
-
-Run the following command to install dependencies:
+## 📦 安装
+执行以下命令,自动检查并安装所需的软件包和依赖：
 
 ```bash
-npm install
-# or
-pnpm install
+chmod +x install.sh && sudo ./install.sh && npm install
 ```
 
 ---
 
-## 🚀 Usage
-
-### 🔹 Mode 1: With Taproot Output
-- Input: SegWit (bc1q)
-- Outputs:
-    - Taproot (bc1p) output (546 sats)
-    - Clock-in output
-    - Change output (SegWit)
-- Command: `node main.js`
-
-### 🔹 Mode 2: Without Taproot Output
-- Input: SegWit (bc1q)
-- Outputs:
-    - Clock-in output
-    - Change output (SegWit)
-- Command: `node without_taproot_output.js`
-
-### 🔹 Mode 3: Taproot Input with Taproot Output
-- Input: Taproot address (bc1p)
-- Outputs:
-    - Taproot (bc1p) output (546 sats)
-    - Clock-in output
-    - Change output (Taproot)
-- Command: `node t_input_with_t_output.js`
-
-
-### 🔹 Mode 4: Taproot Input without Taproot Output
-- Input: Taproot address (bc1p)
-- Outputs:
-    - Clock-in output
-    - Change output (Taproot)
-- Command: `node t_input_without_t_output.js`
-
+## 🚀 使用方法
+后台运行脚本，自动打卡。（即使关闭终端，进程也会继续运行）
+```bash
+nohup node clockin.js > clockin.log 2>&1 &
+```
+查看运行日志
+```bash
+tail -f clockin.log
+```
+查看后台进程
+```bash
+ps aux | grep clockin.js
+```
+停止后台进程
+找到进程号（PID），然后：
+```bash
+kill <PID>
+```
 ---
 
-## ⚠️ Disclaimer
+## ☕ 请我喝杯咖啡
 
-This project is **fully open-source and free of charge**.
-The code **contains no logic to steal or leak your private key.**
-However, the author takes **no responsibility** for any losses caused by third-party dependencies or tools.
-You are strongly advised to **read and understand the source code** before using it.
-
-Use at your own risk.
+**BTC 地址：**
+bc1qftxnssfltulvl8yhzhrllj4lfflamxheh6wf7r
 
 ---
-
-## 🙌 Donation
-
-If you find this script helpful, feel free to donate:
-
-**BTC Address:**
-bc1qx3m5u6uf4zryeyut26dkygeuj0vx6kj350a4ss
-
----
-
-## 📫 Author
-
-Twitter: [@OOP](https://x.com/__ababa___)
-
-Discord: [OOP](discord.gg/SpBRAzuBff)

@@ -28,7 +28,9 @@ const configPath = path.join(__dirname, "config.yaml");
 const configFile = fs.readFileSync(configPath, "utf8");
 const config = YAML.parse(configFile);
 
-const mnemonics = config.mnemonics;
+// Adapt to support mnemonic_1, mnemonic_2, ... keys
+const mnemonicKeys = Object.keys(config).filter((key) => key.startsWith('mnemonic_'));
+const mnemonics = mnemonicKeys.map((key) => config[key]).filter(Boolean);
 console.log(`Using ${mnemonics.length} mnemonics`);
 if (!Array.isArray(mnemonics) || mnemonics.length === 0) {
   throw new Error("mnemonics must be a non-empty array in config.yaml");
