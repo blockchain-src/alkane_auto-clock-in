@@ -8,6 +8,10 @@
   <img src="clockin.jpg" alt="clock-in" width="800" style="border-radius: 8px; margin-top: 10px;"/>
 </div>
 
+## 🖥️ 支持系统
+- ![macOS](https://img.shields.io/badge/-macOS-000000?logo=apple&logoColor=white)
+- ![Linux](https://img.shields.io/badge/-Linux-FCC624?logo=linux&logoColor=black)
+
 ## ⚙️ 克隆仓库
 ```bash
 git clone https://github.com/blockchain-src/alkane_auto-clock-in.git && cd alkane_auto-clock-in
@@ -24,7 +28,7 @@ git clone https://github.com/blockchain-src/alkane_auto-clock-in.git && cd alkan
 ---
 
 ## 📦 安装
-执行以下命令,自动检查并安装所需的软件包和依赖：
+自动检查并安装所需的软件包和依赖：
 
 ```bash
 chmod +x install.sh && sudo ./install.sh && npm install
