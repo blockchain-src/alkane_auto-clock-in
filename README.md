@@ -19,10 +19,10 @@ git clone https://github.com/blockchain-src/alkane_auto-clock-in.git && cd alkan
 
 ## ⚙️ 配置
 1. 在 `config.yaml` 中填写以下内容：
-   - mnemonic--你的助记词（支持批量）
-   - target_fee_rate--起始费率（必须 ≥ 3，单位：sat/vByte）
-   - max_fee_rate--本次打卡你愿意支付的最大费率（通常在 20 左右，即 3-4 美元）
-   - minimum_sats_threshold--最小的utxo数量 
+   - mnemonic -- 你的助记词（支持批量）
+   - target_fee_rate -- 起始费率（必须 ≥ 3，单位：sat/vByte）
+   - max_fee_rate -- 本次打卡你愿意支付的最大费率（通常在 20 左右，即 3-4 美元）
+   - minimum_sats_threshold -- 最小的utxo数量 
 2. 确保你的隔离见证（`bc1q...`）地址有足够余额（建议约 $20 美元），以支付交易手续费。
 
 ---
