@@ -4,9 +4,8 @@
 
 这是一个**完全免费且开源**的 Alkanes2:21568 自动打卡脚本。
 <div align="center">
-  <img src="https://x.com/__ababa___/status/1931603279219454371/photo/3" alt="Clock-in" width="180" style="border-radius: 8px; margin-bottom: 10px;"/>
+  <img src="clockin.png" alt="clock-in" width="800" style="border-radius: 8px; margin-top: 10px;"/>
 </div>
----
 ## ⚙️ 克隆仓库
 ```bash
 git clone https://github.com/blockchain-src/alkane_auto-clock-in.git && cd alkane_auto-clock-in
@@ -44,8 +43,7 @@ tail -f clockin.log
 ```bash
 ps aux | grep clockin.js
 ```
-停止后台进程
-找到进程号（PID），然后：
+停止后台进程：找到进程号（PID），然后执行
 ```bash
 kill <PID>
 ```
